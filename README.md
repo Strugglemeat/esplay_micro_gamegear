@@ -11,5 +11,7 @@ There's still one big goal to accomplish here: I want to load the games from the
 Here's an example of an NES emulator that loads directly from the internal flash memory: https://github.com/badvision/esp32_nesemu
 
 youtube video I made about this firmware: https://youtu.be/DklmjbdR9SU
+
 youtube video about the esplay micro device #1: https://www.youtube.com/watch?v=7j7IRWV2tp8 (not my video)
+
 youtube video about the esplay micro device #2: https://www.youtube.com/watch?v=p0fNz_PFzWU (not my video)
