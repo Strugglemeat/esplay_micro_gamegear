@@ -5,7 +5,6 @@
 #include "esp_partition.h"
 #include "driver/i2s.h"
 #include "esp_spiffs.h"
-#include "nvs_flash.h"
 //#include "esp_sleep.h"
 //#include "driver/rtc_io.h"
 #include <limits.h>
