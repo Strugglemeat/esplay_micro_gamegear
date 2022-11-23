@@ -1,42 +1,23 @@
-#include "freertos/FreeRTOS.h"
 #include "esp_system.h"
 #include "esp_event.h"
-#include "nvs_flash.h"
-#include "esp_partition.h"
 #include "driver/i2s.h"
-#include "esp_spiffs.h"
-//#include "esp_sleep.h"
-//#include "driver/rtc_io.h"
 #include <limits.h>
-
 #include "../components/smsplus/shared.h"
-
-//#include "settings.h"
 #include "audio.h"
 #include "gamepad.h"
 #include "system.h"
 #include "display.h"
-#include "sdcard.h"
 #include "power.h"
 #include "display_sms.h"
-
 #include <dirent.h>
-
-int32_t scaleAlg;
-
-const char *SD_BASE_PATH = "/sd";
 
 #define AUDIO_SAMPLE_RATE (32000)
 
 uint16 palette[PALETTE_SIZE];
 uint8_t *framebuffer[2];
 int currentFramebuffer = 0;
-
 uint32_t *audioBuffer = NULL;
 int audioBufferCount = 0;
-int showOverlay = 0;
-
-//spi_flash_mmap_handle_t hrom;
 
 QueueHandle_t vidQueue;
 TaskHandle_t videoTaskHandle;
@@ -80,30 +61,6 @@ void videoTask(void *arg)
 }
 
 
-//Read an unaligned byte.
-char unalChar(const unsigned char *adr)
-{
-    //See if the byte is in memory that can be read unaligned anyway.
-    if (!(((int)adr) & 0x40000000))
-        return *adr;
-    //Nope: grab a word and distill the byte.
-    int *p = (int *)((int)adr & 0xfffffffc);
-    int v = *p;
-    int w = ((int)adr & 3);
-    if (w == 0)
-        return ((v >> 0) & 0xff);
-    if (w == 1)
-        return ((v >> 8) & 0xff);
-    if (w == 2)
-        return ((v >> 16) & 0xff);
-    if (w == 3)
-        return ((v >> 24) & 0xff);
-
-    abort();
-    return 0;
-}
-
-//char cartName[1024];
 void app_main(void)
 {
     framebuffer[0] = heap_caps_malloc(256 * 192, MALLOC_CAP_8BIT | MALLOC_CAP_DMA);
@@ -120,60 +77,51 @@ void app_main(void)
 
     esplay_system_init();
 
-    // Joystick.
     gamepad_init();
 
-    // audio
     audio_init(AUDIO_SAMPLE_RATE);
 
-    // battery
     battery_level_init();
 
     display_prepare();
 
     display_init();
-    //int brightness;
 
-     set_display_brightness(70);
-
-    // load alghorithm
-    //settings_load(SettingAlg, &scaleAlg);
-
-    // Open SD card
-    esp_err_t r = sdcard_open(SD_BASE_PATH);
-    if (r != ESP_OK)
-    {
-        abort();
-    }
+     //set_display_brightness(70);
 
 	const char *FILENAME = NULL;
-	FILENAME = "/sd/roms/gg/supcol.gg";
+	FILENAME = "supcol.gg";
 
         input_gamepad_state bootState = gamepad_input_read_raw();
 
         if (bootState.values[GAMEPAD_INPUT_START])
         {
-	FILENAME = "/sd/roms/gg/poker.gg";
+	FILENAME = "shenzhen.gg";
         }
 
         if (bootState.values[GAMEPAD_INPUT_UP])
         {
-	FILENAME = "/sd/roms/gg/bakubaku.gg";
+	FILENAME = "poker.gg";
         }
+
+     //   if (bootState.values[GAMEPAD_INPUT_UP])
+    //    {
+//	FILENAME = "bakubaku.gg";
+     //   }
 
         if (bootState.values[GAMEPAD_INPUT_DOWN])
         {
-	FILENAME = "/sd/roms/gg/4in1.gg";
+	FILENAME = "4in1.gg";
         }
 
         if (bootState.values[GAMEPAD_INPUT_LEFT])
         {
-	FILENAME = "/sd/roms/gg/funpak.gg";
+	FILENAME = "funpak.gg";
         }
 
         if (bootState.values[GAMEPAD_INPUT_RIGHT])
         {
-	FILENAME = "/sd/roms/gg/tetris.gg";
+	FILENAME = "tetris.gg";
         }
 
     // Load the ROM
@@ -200,7 +148,7 @@ void app_main(void)
 
     system_init2();
     system_reset();
-
+set_display_brightness(70); //set this lower down to see if it makes a difference with the blinking at startup of device
     input_gamepad_state previousState;
     gamepad_read(&previousState);
 
@@ -297,6 +245,7 @@ void app_main(void)
 
         previousState = joystick;
 
+//removing the below code seems to make it run slower 
         int elapsedTime;
         if (stopTime > startTime)
             elapsedTime = (stopTime - startTime);
@@ -316,5 +265,6 @@ void app_main(void)
             frame = 0;
             totalElapsedTime = 0;
         }
+
     }
 }
