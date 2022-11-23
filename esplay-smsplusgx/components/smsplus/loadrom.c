@@ -1,35 +1,48 @@
 #include "shared.h"
+#include "rom/supcol.h"
 
-extern unsigned long crc32(crc, buf, len);
+#include "rom/shenzhen.h"
+#include "rom/poker.h"
+#include "rom/4in1.h"
+#include "rom/funpak.h"
+//#include "rom/bakubaku.h"
+#include "rom/tetris.h"
 
 int load_rom(char *filename)
 {
-    FILE *fd = NULL;
-
-    fd = fopen(filename, "rb");
-    if (!fd)
-        abort();
-
-    /* Seek to end of file, and get size */
-
-    fseek(fd, 0, SEEK_END);
-    size_t actual_size = ftell(fd);
-    fseek(fd, 0, SEEK_SET);
+size_t actual_size = 262144;
 
     cart.size = actual_size;
-    if (cart.size < 0x4000)
-        cart.size = 0x4000;
 
     cart.rom = ESP32_PSRAM;
-    size_t cnt = fread(cart.rom, cart.size, 1, fd);
-    //if (cnt != 1) abort();
+/*
+if(strcmp(filename,"shenzhen.gg")==0)memcpy(cart.rom,shenzhen_rom,32768);
+else if(strcmp(filename,"poker.gg")==0)memcpy(cart.rom,poker_rom,131072);
+else if(strcmp(filename,"4in1.gg")==0)memcpy(cart.rom,fourinone_rom,262144);
+else if(strcmp(filename,"funpak.gg")==0)memcpy(cart.rom,funpak_rom,262144);
+else if(strcmp(filename,"bakubaku.gg")==0)memcpy(cart.rom,bakubaku_rom,262144);
+else if(strcmp(filename,"tetris.gg")==0)memcpy(cart.rom,tetris_rom,65536);
+else memcpy(cart.rom,supcol_rom,131072);
+*/
+
+
+if(strcmp(filename,"shenzhen.gg")==0)memcpy(cart.rom,shenzhen_rom,cart.size);
+else if(strcmp(filename,"poker.gg")==0)memcpy(cart.rom,poker_rom,cart.size);
+else if(strcmp(filename,"4in1.gg")==0)memcpy(cart.rom,fourinone_rom,cart.size);
+else if(strcmp(filename,"funpak.gg")==0)memcpy(cart.rom,funpak_rom,cart.size);
+//else if(strcmp(filename,"bakubaku.gg")==0)memcpy(cart.rom,bakubaku_rom,cart.size);
+else if(strcmp(filename,"tetris.gg")==0)memcpy(cart.rom,tetris_rom,cart.size);
+else memcpy(cart.rom,supcol_rom,cart.size);
+
+
+//memcpy(cart.rom,supcol_rom,cart.size);
+//memcpy(cart.rom,shenzhen_rom,cart.size);
+
     __asm__("nop");
     __asm__("nop");
     __asm__("nop");
     __asm__("nop");
     __asm__("memw");
-
-    fclose(fd);
 
     /* Take care of image header, if present */
     if ((cart.size / 512) & 1)
@@ -41,7 +54,6 @@ int load_rom(char *filename)
     /* 16k pages */
     cart.pages = cart.size / 0x4000;
 
-    cart.crc = crc32(0, cart.rom, option.console == 6 ? actual_size : cart.size);
     cart.loaded = 1;
 
 //set config
@@ -52,8 +64,6 @@ int load_rom(char *filename)
     sms.glasses_3d = 0;
     sms.device[0] = DEVICE_PAD2B;
     sms.use_fm = 0;
-
-    printf("%s: OK. cart.crc=%#010lx\n", __func__, cart.crc);
 
     return 1;
 }
